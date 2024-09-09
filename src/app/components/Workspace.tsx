@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { ToneAudioNode, PolySynth, Frequency, now, context } from 'tone';
+import * as Tone from 'tone';
 import classNames from 'classnames';
-import SynthProps from './SynthProps';
+import SynthProps from './SynthProps'
 import midiListener from '@/app/utils/midiListener';
 
 /**
@@ -14,18 +15,14 @@ export default function Workspace() {
 
   context.lookAhead = 0;
 
-  const createSynth = () => {
-    const synth = new PolySynth().toDestination();
+  window.Tone = Tone;
 
-    synth.set({
-      envelope: {
-        attack: 0.005,
-        decay: 0.1,
-        sustain: 0.3,
-        release: 0.1
-      }
+  const createSynth = () => {
+    const polySynth = new PolySynth(Tone.Synth).toDestination();
+
+    polySynth.set({
     });
-    setAudioNodes([...audioNodes, synth]);
+    setAudioNodes([...audioNodes, polySynth]);
   };
 
   const removeAudioNode = (audioNode: ToneAudioNode) => {
@@ -43,6 +40,11 @@ export default function Workspace() {
     }
   }
 
+  const makeActive = (audioNode: ToneAudioNode) => {
+    window.activeNode = audioNode;
+    setActiveAudioNode(audioNode);
+  }
+
   midiListener(triggerActiveSynth);
 
   return (
@@ -57,7 +59,7 @@ export default function Workspace() {
               activeAudioNode === audioNode && 'bg-gray-900'
             )}
           >
-            <button onClick={() => setActiveAudioNode(audioNode)}>Edit</button>
+            <button onClick={() => makeActive(audioNode)}>Edit</button>
             <button onClick={() => removeAudioNode(audioNode)}>Remove</button>
           </div>
         ))}

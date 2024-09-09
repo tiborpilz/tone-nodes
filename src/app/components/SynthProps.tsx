@@ -1,5 +1,6 @@
 'use client';
 import { ToneAudioNode, Synth, Param } from 'tone';
+import { useState } from 'react';
 import ParamInput from './ParamInput';
 
 function isSynth(audioNode: ToneAudioNode): audioNode is Synth {
@@ -15,6 +16,15 @@ export default function SynthProps({
     ([, value]) => value instanceof Param
   ));
 
+  const [envelope, setEnvelope] = useState({
+    attack: 0.1,
+    decay: 0.1,
+    sustain: 0.5,
+    release: 0.5,
+  });
+
+  const envelopeParams = Object.entries(envelope);
+
   return (
     <div>
       <h2>Synth Properties</h2>
@@ -28,6 +38,26 @@ export default function SynthProps({
             <ParamInput
               label={key}
               param={value}
+            />
+          </div>
+        ))
+      }
+      {
+        envelopeParams.map(([key, value]) => (
+          <div key={key}>
+            <ParamInput
+              label={key}
+              param={value}
+              onChange={(newValue) => {
+                setEnvelope({
+                  ...envelope,
+                  [key]: newValue,
+                });
+
+                audioNode.set({
+                  envelope,
+                });
+              }}
             />
           </div>
         ))

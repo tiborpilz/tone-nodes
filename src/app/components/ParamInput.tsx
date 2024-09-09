@@ -2,29 +2,75 @@
 
 import { useState } from 'react';
 import { Param } from 'tone';
-import { UnitName } from 'tone/build/esm/core/type/Units';
+import { UnitName, TimeObject, Subdivision } from 'tone/build/esm/core/type/Units';
+
+function isParam<T extends UnitName>(param: Param<T> | number): param is Param<T> {
+  return (param as Param<T>).value !== undefined;
+}
+
+function isTimeObject(param: string | TimeObject): param is TimeObject {
+  const exponents = Array.from({ length: 8 }, (_, i) => i);
+  const subdivisionKeys =
+    exponents.reduce((acc, curr) => {
+      const value = Math.pow(2, curr);
+      return [
+        ...acc,
+        `${value}n`,
+        `${value}n.`,
+        `${value}t`,
+      ] as Array<Subdivision>;
+  }, [] as Array<Subdivision>);
+
+  return Object.keys(param).every(key => subdivisionKeys.includes(key));
+}
+
+function paramToNumber(param: string | number | TimeObject): number {
+  if (typeof param === 'number') {
+    return param;
+  }
+  if (isTimeObject(param)) {
+    const firstValue = Object.values(param)[0];
+    if (typeof firstValue === 'number') {
+      return firstValue;
+    }
+    return parseFloat(firstValue ?? 0);
+  }
+  return parseFloat(param);
+}
 
 export default function ParamInput<T extends UnitName>({
   param,
   label,
+  onChange,
 }: {
-  param: Param<T>,
+  param: Param<T> | number,
   label: string,
+  onChange?: (value: number) => void,
 }) {
-  const [value, setValue] = useState(param.value as number);
+  const defaultValue = isParam(param) ? param.value : param;
+  const [value, setValue] = useState(defaultValue);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(parseFloat(e.target.value));
+    if (isParam(param)) {
+      param.value = parseFloat(e.target.value);
+    } else {
+      onChange?.(parseFloat(e.target.value));
+    }
+  };
 
   return (
     <label data-testid="param-input">
       <span>{label}</span>
       <input
         type="range"
-        value={value}
-        onChange={(e) => {
-          setValue(parseFloat(e.target.value));
-          param.value = parseFloat(e.target.value);
-        }}
+        value={paramToNumber(value)}
+        onChange={handleChange}
+        min={label === 'volume' ? -60 : 0}
+        max={label === 'volume' ? 6 : 1}
+        step={label === 'volume' ? 0.1 : 0.01}
       />
-      <span>{value}</span>
+      <span>{paramToNumber(value)}</span>
     </label>
   );
 }
