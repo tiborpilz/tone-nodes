@@ -16,7 +16,6 @@ export default function ParamInput<T extends UnitName>({
   return (
     <label>
       <span>{label}</span>
-      <span>{value}</span>
       <input
         type="range"
         value={value}
@@ -25,6 +24,7 @@ export default function ParamInput<T extends UnitName>({
           param.value = parseFloat(e.target.value);
         }}
       />
+      <span>{value}</span>
     </label>
   );
 }

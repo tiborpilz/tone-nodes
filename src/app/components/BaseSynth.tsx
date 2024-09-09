@@ -16,8 +16,6 @@ function BaseSynth<T extends SynthName>({
 
   const toneInstrument = new Tone[type]().toDestination();
 
-  toneInstrument.harmonicity;
-
   const triggerAttack = async () => {
     const now = Tone.now();
     toneInstrument.triggerAttackRelease('C4', '16n', now);
