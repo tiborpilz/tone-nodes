@@ -1,9 +1,7 @@
-import Instrument from '@/app/components/instrument';
+import { Workspace } from '@/app/components';
 
 export default function Home() {
   return (
-    <div>
-      <Instrument type="AMSynth" />
-    </div>
+    <Workspace />
   );
 }

@@ -12,12 +12,10 @@
     let
       overlays = [ (import rust-overlay) ];
 
-      # Helper generating outputs for each desired system
       forAllSystems = nixpkgs.lib.genAttrs [
         "aarch64-darwin"
       ];
 
-      # Import nixpkgs' package set for each system.
       nixpkgsFor = forAllSystems (system:
         import nixpkgs {
           inherit system overlays;
@@ -35,6 +33,7 @@
             libiconv
             darwin.apple_sdk.frameworks.AppKit
             darwin.apple_sdk.frameworks.WebKit
+            cargo-tauri
           ];
 
           packages = packages-darwin;
