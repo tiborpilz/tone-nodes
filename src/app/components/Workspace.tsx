@@ -50,7 +50,7 @@ export default function Workspace() {
 
   return (
     <div>
-      <button onClick={createSynth}>Create Synth</button>
+      <button onClick={createSynth}>Create Synth Henlo</button>
       <div>
         {audioNodes.map((audioNode, index) => (
           <div

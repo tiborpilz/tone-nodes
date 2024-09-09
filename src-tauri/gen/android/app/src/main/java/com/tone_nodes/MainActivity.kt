@@ -1,3 +1,3 @@
-package gg.tbr.tone_nodes
+package com.tone_nodes
 
 class MainActivity : TauriActivity()

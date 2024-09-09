@@ -30,6 +30,7 @@
             darwin.apple_sdk.frameworks.AppKit
             darwin.apple_sdk.frameworks.WebKit
             cargo-tauri
+            openjdk17
           ];
 
           packages = packages-darwin;
