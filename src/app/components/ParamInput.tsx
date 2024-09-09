@@ -14,7 +14,7 @@ export default function ParamInput<T extends UnitName>({
   const [value, setValue] = useState(param.value as number);
 
   return (
-    <label>
+    <label data-testid="param-input">
       <span>{label}</span>
       <input
         type="range"
