@@ -1,8 +1,7 @@
 'use client';
 import { ToneAudioNode, Synth, PolySynth, Param } from 'tone';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ParamInput from './ParamInput';
-import midiListener from '@/app/utils/midiListener';
 
 type SynthLike = Synth | PolySynth;
 

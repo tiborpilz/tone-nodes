@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Param } from 'tone';
 import { UnitName, TimeObject, Subdivision } from 'tone/build/esm/core/type/Units';
 import midiListener from '@/app/utils/midiListener';
