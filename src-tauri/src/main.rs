@@ -5,7 +5,7 @@
 
 use std::sync::{Arc, Mutex};
 use midir::{Ignore, MidiInput, MidiInputConnection};
-use tauri::{Manager, Window, Wry};
+use tauri::{Manager, Window, Wry, Emitter};
 use serde::{Serialize};
 
 #[derive(Default)]
@@ -30,7 +30,7 @@ fn open_midi_connection(
   let midi_in_ports = midi_in.ports();
   if let Some(in_port) = midi_in_ports.get(input_idx) {
     let conn_in = midi_in.connect(in_port, "midir-test", move |stamp, message, log| {
-      let _ = handle.emit_all("midi_message",  MidiMessage { message: message.to_vec() });
+      let _ = handle.emit("midi_message",  MidiMessage { message: message.to_vec() });
 
       println!("{}: {:?} (len = {})", stamp, message, message.len());
     }, ()).unwrap();
@@ -41,7 +41,7 @@ fn open_midi_connection(
 fn main() {
   tauri::Builder::default()
     .setup(|app| {
-      let main_window = app.get_window("main").unwrap();
+      let main_window = app.get_webview_window("main").unwrap();
       main_window.open_devtools();
       Ok(())
     })

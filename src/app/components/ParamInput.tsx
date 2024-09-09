@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Param } from 'tone';
 import { UnitName, TimeObject, Subdivision } from 'tone/build/esm/core/type/Units';
 import midiListener from '@/app/utils/midiListener';
@@ -22,7 +22,7 @@ function isTimeObject(param: string | TimeObject): param is TimeObject {
       ] as Array<Subdivision>;
   }, [] as Array<Subdivision>);
 
-  return Object.keys(param).every(key => subdivisionKeys.includes(key));
+  return Object.keys(param).every((key) => subdivisionKeys.includes(key as Subdivision));
 }
 
 function paramToNumber(param: string | number | TimeObject): number {
@@ -53,13 +53,9 @@ export default function ParamInput<T extends UnitName>({
   const [isLearning, setIsLearning] = useState(false);
   const [midiChannel, setMidiChannel] = useState(-1);
 
-  const setParamValue = (value: number) => {
-    if (isParam(param)) {
-      param.value = value;
-    } else {
-      onChange?.(value);
-    }
-    setValue(value);
+  const setParamValue = (newValue: number) => {
+    onChange?.(newValue);
+    setValue(newValue);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,28 +66,27 @@ export default function ParamInput<T extends UnitName>({
   const max = label === 'volume' ? 6 : 1;
 
   const handleMidiLearn = () => {
-    setIsLearning(true);
+    if (!isLearning) {
+      setIsLearning(true);
+    }
   }
 
-  midiListener((command: number, channel: number, value: number) => {
-    if (isLearning && command === 176) {
-      setIsLearning(false);
+  midiListener((command, channel, newValue) => {
+    if (command === 176 && isLearning) {
       setMidiChannel(channel);
+      setIsLearning(false);
     }
 
-    if (channel === -1 || channel !== midiChannel) {
-      return;
+    if (command === 176 && channel === midiChannel) {
+      const scaledValue = newValue / 127 * (max - min) + min;
+      setParamValue(scaledValue);
     }
-
-    requestAnimationFrame(() => {
-      console.log('setting param value', value, channel, midiChannel, isLearning, label);
-      setParamValue(value / 127 * (max - min) + min);
-    });
-  });
+  })
 
   return (
     <label data-testid="param-input">
       <span>{label}</span>
+      <span>{isLearning ? 'learning' : 'not learning'}</span>
       <input
         type="range"
         value={paramToNumber(value)}

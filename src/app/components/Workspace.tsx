@@ -15,8 +15,6 @@ export default function Workspace() {
 
   context.lookAhead = 0;
 
-  window.Tone = Tone;
-
   const createSynth = () => {
     const polySynth = new PolySynth(Tone.Synth).toDestination();
 
@@ -45,7 +43,6 @@ export default function Workspace() {
   }
 
   const makeActive = (audioNode: ToneAudioNode) => {
-    window.activeNode = audioNode;
     setActiveAudioNode(audioNode);
   }
 
