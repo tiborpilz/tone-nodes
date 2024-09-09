@@ -33,8 +33,12 @@ export default function Workspace() {
     }
   }
 
-  const triggerActiveSynth = (midiNote?: number, velocity?: number) => {
-    if (activeAudioNode instanceof PolySynth && midiNote !== undefined) {
+  const triggerActiveSynth = (command: number, midiNote?: number, velocity?: number) => {
+    if (
+      activeAudioNode instanceof PolySynth
+      && midiNote !== undefined
+      && command === 144
+    ) {
       const timeNow = now();
       activeAudioNode.triggerAttackRelease(Frequency(midiNote, 'midi').toFrequency(), '32n', timeNow, velocity);
     }

@@ -1,10 +1,12 @@
 'use client';
-import { ToneAudioNode, Synth, Param } from 'tone';
+import { ToneAudioNode, Synth, PolySynth, Param } from 'tone';
 import { useState } from 'react';
 import ParamInput from './ParamInput';
 
-function isSynth(audioNode: ToneAudioNode): audioNode is Synth {
-  return audioNode instanceof Synth;
+type SynthLike = Synth | PolySynth;
+
+function isSynthLike(audioNode: ToneAudioNode): audioNode is SynthLike {
+  return audioNode instanceof Synth || audioNode instanceof PolySynth;
 }
 
 export default function SynthProps({
@@ -29,7 +31,7 @@ export default function SynthProps({
     <div>
       <h2>Synth Properties</h2>
       {
-        isSynth(audioNode) &&
+        isSynthLike(audioNode) &&
           <button onClick={() => audioNode.triggerAttackRelease('C4', '8n')}>Play</button>
       }
       {

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Param } from 'tone';
 import { UnitName, TimeObject, Subdivision } from 'tone/build/esm/core/type/Units';
+import midiListener from '@/app/utils/midiListener';
 
 function isParam<T extends UnitName>(param: Param<T> | number): param is Param<T> {
   return (param as Param<T>).value !== undefined;
@@ -49,15 +50,44 @@ export default function ParamInput<T extends UnitName>({
 }) {
   const defaultValue = isParam(param) ? param.value : param;
   const [value, setValue] = useState(defaultValue);
+  const [isLearning, setIsLearning] = useState(false);
+  const [midiChannel, setMidiChannel] = useState(-1);
+
+  const setParamValue = (value: number) => {
+    if (isParam(param)) {
+      param.value = value;
+    } else {
+      onChange?.(value);
+    }
+    setValue(value);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(parseFloat(e.target.value));
-    if (isParam(param)) {
-      param.value = parseFloat(e.target.value);
-    } else {
-      onChange?.(parseFloat(e.target.value));
-    }
+    setParamValue(parseFloat(e.target.value));
   };
+
+  const min = label === 'volume' ? -60 : 0;
+  const max = label === 'volume' ? 6 : 1;
+
+  const handleMidiLearn = () => {
+    setIsLearning(true);
+  }
+
+  midiListener((command: number, channel: number, value: number) => {
+    if (isLearning && command === 176) {
+      setIsLearning(false);
+      setMidiChannel(channel);
+    }
+
+    if (channel === -1 || channel !== midiChannel) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      console.log('setting param value', value, channel, midiChannel, isLearning, label);
+      setParamValue(value / 127 * (max - min) + min);
+    });
+  });
 
   return (
     <label data-testid="param-input">
@@ -71,6 +101,9 @@ export default function ParamInput<T extends UnitName>({
         step={label === 'volume' ? 0.1 : 0.01}
       />
       <span>{paramToNumber(value)}</span>
+      <button onClick={handleMidiLearn}>
+        { isLearning ? 'Learning...' : 'Learn MIDI' }
+      </button>
     </label>
   );
 }

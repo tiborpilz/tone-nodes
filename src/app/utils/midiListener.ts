@@ -10,7 +10,7 @@ type TauriMidiMessage = {
 };
 
 export default async function midiListener(
-  listener: (note: number, velocity: number) => void,
+  listener: (command: number, note: number, velocity: number) => void,
 ) {
   // try to use browser's native Web MIDI API if available
   if (navigator.requestMIDIAccess) {
@@ -18,18 +18,14 @@ export default async function midiListener(
       midiAccess.inputs.forEach((input) => {
         input.onmidimessage = (message) => {
           const [command, note, velocity] = message.data;
-          if (command === 144) {
-            listener(note, velocity);
-          }
+          listener(command, note, velocity);
         };
       });
     });
   // Otherwise, listen for messages from Tauri
   } else {
     listen('midi_message', (event: TauriMidiMessage) => {
-      if (event.payload.message.at(0) === 144) {
-        listener(event.payload.message.at(1), event.payload.message.at(2));
-      }
+      listener(...event.payload.message);
     })
 
     invoke('open_midi_connection', { inputIdx: 1 });
