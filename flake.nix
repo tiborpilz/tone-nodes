@@ -16,10 +16,6 @@
         "aarch64-darwin"
       ];
 
-      nixpkgsFor = forAllSystems (system:
-        import nixpkgs {
-          inherit system overlays;
-        });
     in
     {
       devShells = forAllSystems (system:
