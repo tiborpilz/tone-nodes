@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { ToneAudioNode, Synth, Frequency, now } from 'tone';
+import { ToneAudioNode, PolySynth, Frequency, now, context } from 'tone';
 import classNames from 'classnames';
 import SynthProps from './SynthProps';
-import VisualizeMidi from './VisualizeMidi';
+import midiListener from '@/app/utils/midiListener';
 
 /**
  * The audio workspace. Add/connect/edit/remove audio nodes.
@@ -12,8 +12,10 @@ export default function Workspace() {
   const [audioNodes, setAudioNodes] = useState<Array<ToneAudioNode>>([]);
   const [activeAudioNode, setActiveAudioNode] = useState<ToneAudioNode | null>(null);
 
+  context.lookAhead = 0;
+
   const createSynth = () => {
-    const synth = new Synth().toDestination();
+    const synth = new PolySynth().toDestination();
 
     synth.set({
       envelope: {
@@ -34,16 +36,17 @@ export default function Workspace() {
     }
   }
 
-  const triggerActiveSynth = (midiNote?: number) => {
-    if (activeAudioNode instanceof Synth && midiNote !== undefined) {
+  const triggerActiveSynth = (midiNote?: number, velocity?: number) => {
+    if (activeAudioNode instanceof PolySynth && midiNote !== undefined) {
       const timeNow = now();
-      activeAudioNode.triggerAttackRelease(Frequency(midiNote, 'midi').toFrequency(), '32n', timeNow);
+      activeAudioNode.triggerAttackRelease(Frequency(midiNote, 'midi').toFrequency(), '32n', timeNow, velocity);
     }
   }
 
+  midiListener(triggerActiveSynth);
+
   return (
     <div>
-      <VisualizeMidi triggerMidi={triggerActiveSynth} />
       <button onClick={createSynth}>Create Synth</button>
       <div>
         {audioNodes.map((audioNode, index) => (
