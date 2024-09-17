@@ -8,8 +8,6 @@ repository = ""
 edition = "2021"
 rust-version = "1.71"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [lib]
 name = "app_lib"
 crate-type = ["staticlib", "cdylib", "lib"]
@@ -21,4 +19,10 @@ tauri-build = { version = "2.0.0-rc.9", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "2.0.0-rc.10", features = [] }
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+midir = { version = "0.10.0" }
+
+# On Android, do not include midir
+[target.'cfg(target_os = "android")'.dependencies]
 midir = { version = "0.10.0", optional = true }
