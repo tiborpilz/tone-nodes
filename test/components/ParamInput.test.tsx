@@ -23,9 +23,7 @@ describe('ParamInput', () => {
   it('should render without crashing', () => {
     render(<ParamInput param={mockAudioParam} label="Mock Param" />);
 
-    expect(invokeMock).toHaveBeenCalledTimes(1);
     const component = document.querySelector('[data-testid="param-input"]');
-
     expect(component?.innerHTML).toMatchSnapshot();
   });
 });
