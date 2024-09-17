@@ -4,7 +4,7 @@ import { ToneAudioNode, PolySynth, Frequency, now, context } from 'tone';
 import * as Tone from 'tone';
 import classNames from 'classnames';
 import SynthProps from './SynthProps'
-import midiListener from '@/app/utils/midiListener';
+import { addMidiListener } from '@/app/utils/midiListener';
 
 /**
  * The audio workspace. Add/connect/edit/remove audio nodes.
@@ -32,6 +32,7 @@ export default function Workspace() {
   }
 
   const triggerActiveSynth = (command: number, midiNote?: number, velocity?: number) => {
+    console.log('triggerActiveSynth', command, midiNote, velocity);
     if (
       activeAudioNode instanceof PolySynth
       && midiNote !== undefined
@@ -46,7 +47,7 @@ export default function Workspace() {
     setActiveAudioNode(audioNode);
   }
 
-  midiListener(triggerActiveSynth);
+  addMidiListener(triggerActiveSynth);
 
   return (
     <div>

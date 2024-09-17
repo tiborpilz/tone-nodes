@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Param } from 'tone';
 import { UnitName, TimeObject, Subdivision } from 'tone/build/esm/core/type/Units';
-import midiListener from '@/app/utils/midiListener';
+import { trainMidiListener } from '@/app/utils/midiListener';
 
 function isParam<T extends UnitName>(param: Param<T> | number): param is Param<T> {
   return (param as Param<T>).value !== undefined;
@@ -51,7 +51,6 @@ export default function ParamInput<T extends UnitName>({
   const defaultValue = isParam(param) ? param.value : param;
   const [value, setValue] = useState(defaultValue);
   const [isLearning, setIsLearning] = useState(false);
-  const [midiChannel, setMidiChannel] = useState(-1);
 
   const setParamValue = (newValue: number) => {
     onChange?.(newValue);
@@ -68,20 +67,14 @@ export default function ParamInput<T extends UnitName>({
   const handleMidiLearn = () => {
     if (!isLearning) {
       setIsLearning(true);
+      trainMidiListener((command, channel, newValue) => {
+        const scaledValue = newValue / 127 * (max - min) + min;
+        setParamValue(scaledValue);
+      }, () => {
+        setIsLearning(false);
+      });
     }
   }
-
-  midiListener((command, channel, newValue) => {
-    if (command === 176 && isLearning) {
-      setMidiChannel(channel);
-      setIsLearning(false);
-    }
-
-    if (command === 176 && channel === midiChannel) {
-      const scaledValue = newValue / 127 * (max - min) + min;
-      setParamValue(scaledValue);
-    }
-  })
 
   return (
     <label data-testid="param-input">
