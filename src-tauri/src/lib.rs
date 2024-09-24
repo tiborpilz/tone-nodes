@@ -3,8 +3,8 @@ use std::sync::{Arc, Mutex};
 #[cfg(not(target_os = "android"))]
 use midir::{Ignore, MidiInput, MidiInputConnection};
 
-use tauri::{Manager, Window, Wry, Emitter};
-use serde::{Serialize};
+use tauri::{Emitter, Manager, Window, Wry};
+use serde::Serialize;
 
 #[cfg(not(target_os = "android"))]
 #[derive(Default)]
