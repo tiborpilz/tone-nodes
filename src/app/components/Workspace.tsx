@@ -120,19 +120,17 @@ export default function Workspace() {
     const sourceNode = nodes.find((node) => node.id === connection.source);
     const targetNode = nodes.find((node) => node.id === connection.target);
 
-    const isSynthSource = sourceNode?.data.audioNode instanceof PolySynth;
-    const isDistortionTarget = targetNode?.data.audioNode instanceof Tone.Distortion;
-    const isReverbTarget = targetNode?.data.audioNode instanceof Tone.Reverb;
+    /* const isSynthSource = sourceNode?.data.audioNode instanceof PolySynth;
+     * const isDistortionTarget = targetNode?.data.audioNode instanceof Tone.Distortion;
+     * const isReverbTarget = targetNode?.data.audioNode instanceof Tone.Reverb;
+     */
+    const synth = sourceNode?.data.audioNode as Tone.ToneAudioNode;
+    const target = targetNode?.data.audioNode as Tone.ToneAudioNode;
 
-    if (isSynthSource && (isDistortionTarget || isReverbTarget)) {
-      const synth = sourceNode?.data.audioNode as PolySynth;
-      const target = targetNode?.data.audioNode as Tone.ToneAudioNode;
+    synth.disconnect();
 
-      synth.disconnect();
-
-      synth.connect(target);
-      setEdges((oldEdges) => addEdge(connection, oldEdges));
-    }
+    synth.connect(target);
+    setEdges((oldEdges) => addEdge(connection, oldEdges));
   };
 
   addMidiListener(triggerActiveSynth);

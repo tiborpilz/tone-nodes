@@ -21,6 +21,7 @@
     "@tauri-apps/api": "^2.0.0-rc.4",
     "@tauri-apps/cli": "^2.0.0-rc.12",
     "@testing-library/react": "^16.0.1",
+    "@types/bun": "^1.1.10",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
