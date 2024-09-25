@@ -63,6 +63,20 @@ export default function Workspace() {
     }])
   };
 
+  const createReverb = () => {
+    const reverb = new Tone.Reverb(1).toDestination();
+
+    setAudioNodes([...audioNodes, reverb]);
+    setNodes([...nodes, {
+      id: String(nodes.length),
+      position: { x: 0, y: 0 },
+      data: {
+        label: 'Reverb',
+        audioNode: reverb
+      },
+    }])
+  };
+
   useEffect(() => {
     if (selectedNodes.length === 1) {
       makeActive(selectedNodes[0].data.audioNode as ToneAudioNode);
@@ -111,14 +125,15 @@ export default function Workspace() {
 
     const isSynthSource = sourceNode?.data.audioNode instanceof PolySynth;
     const isDistortionTarget = targetNode?.data.audioNode instanceof Tone.Distortion;
+    const isReverbTarget = targetNode?.data.audioNode instanceof Tone.Reverb;
 
-    if (isSynthSource && isDistortionTarget) {
+    if (isSynthSource && (isDistortionTarget || isReverbTarget)) {
       const synth = sourceNode?.data.audioNode as PolySynth;
-      const distortion = targetNode?.data.audioNode as Tone.Distortion;
+      const target = targetNode?.data.audioNode as Tone.ToneAudioNode;
 
       synth.disconnect();
 
-      synth.connect(distortion);
+      synth.connect(target);
       setEdges((oldEdges) => addEdge(connection, oldEdges));
     }
   };
@@ -139,6 +154,7 @@ export default function Workspace() {
       </ReactFlow>
       <button onClick={createSynth}>Create Synth</button>
       <button onClick={createDistortion}>Create Distortion</button>
+      <button onClick={createReverb}>Create Reverb</button>
       <div>
         {audioNodes.map((audioNode, index) => (
           <div
