@@ -8,13 +8,10 @@ import {
   Controls,
   Background,
   useOnSelectionChange,
-  applyEdgeChanges,
   applyNodeChanges,
   addEdge,
   useEdgesState,
   type Connection,
-  type Edge,
-  type EdgeChange,
   type Node,
   type NodeChange,
 } from '@xyflow/react';
