@@ -14,16 +14,19 @@ import {
   Gain,
   Distortion,
   Reverb,
+  Synth,
   getDestination,
   Signal,
 } from 'tone';
 
-export type AudioNode = {
-  audioNode: ToneAudioNode,
-} & Node;
+// export type AudioNode = {
+//   data: Node['data'] & { audioNode: ToneAudioNode },
+// } & Node;
+
+export type AudioNode<T = ToneAudioNode> = Node<{ audioNode: T, label: string }>
 
 export type SignalNode = {
-  signal: Signal,
+  data: Node['data'] & { signal: Signal },
 } & Node;
 
 type ToneNodeType =
@@ -31,7 +34,8 @@ type ToneNodeType =
   | 'Gain'
   | 'Distortion'
   | 'Destination'
-  | 'Reverb';
+  | 'Reverb'
+  | 'Synth';
 
 function findFreeCoordinates(nodes: Array<Node>): { x: number, y: number } {
   const coordinates = nodes.map(node => node.position);
@@ -58,27 +62,53 @@ function createToneNode(
     case 'Oscillator':
       return {
         ...baseNode,
-        audioNode: new Oscillator(),
+        type: 'input',
+        data: {
+          label: 'Oscillator',
+          audioNode: new Oscillator(),
+        },
       };
     case 'Gain':
       return {
         ...baseNode,
-        audioNode: new Gain(),
+        data: {
+          label: 'Gain',
+          audioNode: new Gain(),
+        },
       };
     case 'Distortion':
       return {
         ...baseNode,
-        audioNode: new Distortion(),
+        data: {
+          label: 'Distortion',
+          audioNode: new Distortion(),
+        },
       };
     case 'Destination':
       return {
         ...baseNode,
-        audioNode: getDestination(),
+        type: 'output',
+        data: {
+          label: 'Destination',
+          audioNode: getDestination(),
+        },
       };
     case 'Reverb':
       return {
         ...baseNode,
-        audioNode: new Reverb(),
+        data: {
+          label: 'Reverb',
+          audioNode: new Reverb(),
+        },
+      };
+    case 'Synth':
+      return {
+        ...baseNode,
+        type: 'synth',
+        data: {
+          label: 'Synth',
+          audioNode: new Synth(),
+        },
       };
     default:
       throw new Error(`Unknown node type: ${type}`);
@@ -97,6 +127,7 @@ export type ToneState = {
 
 export const useStore = create<ToneState>()((set, get) => ({
   nodes: [
+    createToneNode('Synth', { x: 0, y: 100 }),
     createToneNode('Oscillator', { x: 100, y: 100 }),
     createToneNode('Gain', { x: 300, y: 100 }),
     createToneNode('Distortion', { x: 500, y: 100 }),
@@ -119,7 +150,7 @@ export const useStore = create<ToneState>()((set, get) => ({
       const source = get().nodes.find(node => node.id === edge.source);
 
       if (source) {
-        source.audioNode.disconnect();
+        source.data.audioNode.disconnect();
       }
     });
 
@@ -138,10 +169,10 @@ export const useStore = create<ToneState>()((set, get) => ({
     const target = get().nodes.find(node => node.id === edge.target);
 
     if (source && target) {
-      source.audioNode.disconnect();
-      source.audioNode.connect(target.audioNode);
-      if ('start' in source.audioNode && typeof source.audioNode.start === 'function') {
-        source.audioNode.start();
+      source.data.audioNode.disconnect();
+      source.data.audioNode.connect(target.data.audioNode);
+      if ('start' in source.data.audioNode && typeof source.data.audioNode.start === 'function') {
+        source.data.audioNode.start();
       }
     }
   },

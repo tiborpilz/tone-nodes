@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ToneAudioNode, PolySynth, Frequency, now } from 'tone';
 import * as Tone from 'tone';
 import classNames from 'classnames';
@@ -12,9 +12,10 @@ import {
   type Edge,
 } from '@xyflow/react';
 import SynthProps from './SynthProps';
+import SynthNode from '@/app/components/SynthNode';
 import { addMidiListener } from '@/app/utils/midiListener';
 import '@xyflow/react/dist/style.css';
-import { ToneState, useStore, type ToneNode } from '@/app/store';
+import { ToneState, useStore, type AudioNode } from '@/app/store';
 
 const selector = (store: ToneState) => ({
   nodes: store.nodes,
@@ -25,6 +26,10 @@ const selector = (store: ToneState) => ({
   addNode: store.addNode,
 });
 
+const nodeTypes = {
+  synth: SynthNode,
+};
+
 /**
  * The audio workspace. Add/connect/edit/remove audio nodes.
  */
@@ -32,7 +37,6 @@ export default function Workspace() {
   const [audioNodes, setAudioNodes] = useState<Array<ToneAudioNode>>([]);
   const [activeAudioNode, setActiveAudioNode] = useState<ToneAudioNode | null>(null);
   const [selectedNodes, setSelectedNodes] = useState<Array<Node>>([]);
-  const { fitView } = useReactFlow();
 
   const store = useStore(selector);
 
@@ -65,6 +69,7 @@ export default function Workspace() {
   return (
     <div className="h-[50vh]">
       <ReactFlow
+        nodeTypes={nodeTypes}
         nodes={store.nodes}
         edges={store.edges}
         onNodesChange={store.onNodesChange}
