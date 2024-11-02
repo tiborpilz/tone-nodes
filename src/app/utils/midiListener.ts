@@ -15,6 +15,7 @@ let channelListeners: Record<number, MidiListener> = {};
 let initialized = false;
 let resolveInitialized: () => void;
 const midiListeners: Array<MidiListener> = [];
+let midiListener: MidiListener;
 
 export async function clearChannelMidiListeners() {
   await initMidi();
@@ -37,9 +38,12 @@ function handleMidiMessage(command: number, channel: number, velocity: number) {
     channelListeners[channel](command, channel, velocity);
   }
 
-  midiListeners.forEach((listener) => {
-    listener(command, channel, velocity);
-  });
+  if (midiListener) {
+    midiListener(command, channel, velocity);
+  }
+  // midiListeners.forEach((listener) => {
+  //   listener(command, channel, velocity);
+  // });
 }
 
 export async function initMidi() {
@@ -94,5 +98,11 @@ export async function trainMidiListener(listener: MidiListener, cleanup?: () => 
 }
 
 export async function addMidiListener(listener: MidiListener) {
+  console.log('Adding midi listener', midiListeners.length);
   midiListeners.push(listener);
+}
+
+export async function setMidiListener(listener: MidiListener) {
+  await initMidi();
+  midiListener = listener;
 }

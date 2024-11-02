@@ -79,6 +79,7 @@ function createToneNode(
     case 'Distortion':
       return {
         ...baseNode,
+        type: 'distortion',
         data: {
           label: 'Distortion',
           audioNode: new Distortion(),

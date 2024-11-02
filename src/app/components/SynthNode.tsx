@@ -17,6 +17,11 @@ export default function SynthNode(props: NodeProps<AudioNode<Synth>>) {
       <div>{ props.data.label as string }</div>
 
       <div className="grid grid-cols-[min-content_50px_1fr] gap-y-1 gap-x-2">
+        <ParamInput
+          param={props.data.audioNode.volume}
+          label="volume"
+          onChange={ (value) => props.data.audioNode.volume.value = value }
+        />
         { ['attack', 'decay', 'sustain', 'release'].map((key) => (
           <ParamInput
             key={key}
