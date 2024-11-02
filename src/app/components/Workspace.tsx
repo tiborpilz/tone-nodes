@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ToneAudioNode, PolySynth, Frequency, now } from 'tone';
 import * as Tone from 'tone';
 import classNames from 'classnames';
@@ -10,10 +10,11 @@ import {
   useReactFlow,
   type Node,
   type Edge,
+  useOnSelectionChange,
 } from '@xyflow/react';
 import SynthProps from './SynthProps';
 import SynthNode from '@/app/components/SynthNode';
-import { addMidiListener } from '@/app/utils/midiListener';
+import { addMidiListener, initMidi } from '@/app/utils/midiListener';
 import '@xyflow/react/dist/style.css';
 import { ToneState, useStore, type AudioNode } from '@/app/store';
 
@@ -40,6 +41,8 @@ export default function Workspace() {
 
   const store = useStore(selector);
 
+  initMidi();
+
   Tone.getContext().lookAhead = 0;
 
   useEffect(() => {
@@ -51,14 +54,29 @@ export default function Workspace() {
   const triggerActiveSynth = (command: number, midiNote?: number, velocity?: number) => {
     console.log('triggerActiveSynth', command, midiNote, velocity);
     if (
-      activeAudioNode instanceof PolySynth
+      selectedNodes.length === 1 && selectedNodes.at(0) !== undefined
+      && selectedNodes[0].type === 'synth'
+      && selectedNodes[0].data.audioNode instanceof Tone.Synth
       && midiNote !== undefined
       && command === 144
     ) {
+      console.log('triggering synth');
       const timeNow = now();
-      activeAudioNode.triggerAttackRelease(Frequency(midiNote, 'midi').toFrequency(), '32n', timeNow, velocity);
+      selectedNodes[0]
+        .data
+        .audioNode
+        .triggerAttackRelease(Frequency(midiNote, 'midi').toFrequency(), '32n', timeNow, velocity);
     }
   }
+
+  const onSelectionChange = useCallback(({ nodes }: { nodes: Array<Node> }) => {
+    console.log(nodes);
+    setSelectedNodes(nodes);
+  }, []);
+
+  useOnSelectionChange({
+    onChange: onSelectionChange,
+  });
 
   const makeActive = (audioNode: ToneAudioNode) => {
     setActiveAudioNode(audioNode);

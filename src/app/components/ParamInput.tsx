@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { Param } from 'tone';
-import { UnitName, TimeObject, Subdivision } from 'tone/build/esm/core/type/Units';
+import { UnitName, TimeObject, Subdivision, Time } from 'tone/build/esm/core/type/Units';
 import { trainMidiListener } from '@/app/utils/midiListener';
 
-function isParam<T extends UnitName>(param: Param<T> | number): param is Param<T> {
+function isParam<T extends UnitName>(param: Param<T> | number | Time): param is Param<T> {
   return (param as Param<T>).value !== undefined;
 }
 
-function isTimeObject(param: string | TimeObject): param is TimeObject {
+function isTimeObject(param: string | TimeObject | Time): param is TimeObject {
   const exponents = Array.from({ length: 8 }, (_, i) => i);
   const subdivisionKeys =
     exponents.reduce((acc, curr) => {
@@ -25,7 +25,7 @@ function isTimeObject(param: string | TimeObject): param is TimeObject {
   return Object.keys(param).every((key) => subdivisionKeys.includes(key as Subdivision));
 }
 
-function paramToNumber(param: string | number | TimeObject): number {
+function paramToNumber(param: string | number | TimeObject | Time): number {
   if (typeof param === 'number') {
     return param;
   }
@@ -44,7 +44,7 @@ export default function ParamInput<T extends UnitName>({
   label,
   onChange,
 }: {
-  param: Param<T> | number,
+  param: Param<T> | number | Time,
   label: string,
   onChange?: (value: number) => void,
 }) {
@@ -77,10 +77,13 @@ export default function ParamInput<T extends UnitName>({
   }
 
   return (
-    <label data-testid="param-input">
-      <span>{label}</span>
-      <span>{isLearning ? 'learning' : 'not learning'}</span>
+    <>
+      <div>
+        <span>{label}</span>
+        <span>{isLearning ? 'learning' : ''}</span>
+      </div>
       <input
+        className="nodrag"
         type="range"
         value={paramToNumber(value)}
         onChange={handleChange}
@@ -88,10 +91,12 @@ export default function ParamInput<T extends UnitName>({
         max={label === 'volume' ? 6 : 1}
         step={label === 'volume' ? 0.1 : 0.01}
       />
-      <span>{paramToNumber(value)}</span>
-      <button onClick={handleMidiLearn}>
-        { isLearning ? 'Learning...' : 'Learn MIDI' }
-      </button>
-    </label>
+      <div>
+        <span>{paramToNumber(value)}</span>
+        <button onClick={handleMidiLearn}>
+          { isLearning ? 'Learning...' : 'Learn MIDI' }
+        </button>
+      </div>
+    </>
   );
 }

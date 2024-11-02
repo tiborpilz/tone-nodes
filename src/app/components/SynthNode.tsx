@@ -2,6 +2,7 @@ import React, { memo, useReducer } from 'react';
 import { Handle, Node, NodeProps, Position } from '@xyflow/react';
 import { Envelope, Synth } from 'tone';
 import { AudioNode } from '@/app/store';
+import ParamInput from '@/app/components/ParamInput';
 
 export default function SynthNode(props: NodeProps<AudioNode<Synth>>) {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -10,9 +11,6 @@ export default function SynthNode(props: NodeProps<AudioNode<Synth>>) {
     envelope[key] = value;
     forceUpdate();
   };
-  const handleChange = (param: AudioParam, value: number) => {
-    param.value = value;
-  };
 
   return (
     <div className="px-4 py-2 shadow-md rounded-md bg-[#1e1e1e]">
@@ -20,23 +18,12 @@ export default function SynthNode(props: NodeProps<AudioNode<Synth>>) {
 
       <div className="grid grid-cols-[min-content_50px_1fr] gap-y-1 gap-x-2">
         { ['attack', 'decay', 'sustain', 'release'].map((key) => (
-          <>
-            <div>{ key }</div>
-            <input
-              className="text-black"
-              onChange={ (e) => handleEnvelopeChange(props.data.audioNode.envelope, key as 'attack' | 'decay' | 'sustain' | 'release', parseFloat(e.target.value)) }
-              value={ props.data.audioNode.envelope[key as 'attack' | 'decay' | 'sustain' | 'release'].toString() }
-            />
-            <input
-              className="nodrag"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              onChange={ (e) => handleEnvelopeChange(props.data.audioNode.envelope, key as 'attack' | 'decay' | 'sustain' | 'release', parseFloat(e.target.value)) }
-              value={ props.data.audioNode.envelope[key as 'attack' | 'decay' | 'sustain' | 'release'].toString() }
-            />
-          </>
+          <ParamInput
+            key={key}
+            param={props.data.audioNode.envelope[key as 'attack' | 'decay' | 'sustain' | 'release']}
+            label={key}
+            onChange={ (value) => handleEnvelopeChange(props.data.audioNode.envelope, key as 'attack' | 'decay' | 'sustain' | 'release', value) }
+          />
         )) }
       </div>
       <Handle

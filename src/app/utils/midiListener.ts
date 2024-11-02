@@ -42,7 +42,7 @@ function handleMidiMessage(command: number, channel: number, velocity: number) {
   });
 }
 
-async function initMidi() {
+export async function initMidi() {
   if (initialized) {
     return;
   }
