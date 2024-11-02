@@ -15,10 +15,15 @@ import {
   Distortion,
   Reverb,
   getDestination,
+  Signal,
 } from 'tone';
 
-export type ToneNode = {
+export type AudioNode = {
   audioNode: ToneAudioNode,
+} & Node;
+
+export type SignalNode = {
+  signal: Signal,
 } & Node;
 
 type ToneNodeType =
@@ -27,7 +32,6 @@ type ToneNodeType =
   | 'Distortion'
   | 'Destination'
   | 'Reverb';
-
 
 function findFreeCoordinates(nodes: Array<Node>): { x: number, y: number } {
   const coordinates = nodes.map(node => node.position);
@@ -43,41 +47,37 @@ function findFreeCoordinates(nodes: Array<Node>): { x: number, y: number } {
 function createToneNode(
   type: ToneNodeType,
   position: { x: number, y: number } = { x: 0, y: 0 },
-): ToneNode {
+): AudioNode {
+  const baseNode = {
+    id: nanoid(6),
+    data: { label: type },
+    position,
+  };
+
   switch (type) {
     case 'Oscillator':
       return {
-        id: nanoid(6),
-        data: { label: 'oscillator' },
-        position,
+        ...baseNode,
         audioNode: new Oscillator(),
       };
     case 'Gain':
       return {
-        id: nanoid(6),
-        data: { label: 'gain' },
-        position,
+        ...baseNode,
         audioNode: new Gain(),
       };
     case 'Distortion':
       return {
-        id: nanoid(6),
-        data: { label: 'distortion' },
-        position,
+        ...baseNode,
         audioNode: new Distortion(),
       };
     case 'Destination':
       return {
-        id: nanoid(6),
-        data: { label: 'destination' },
-        position,
+        ...baseNode,
         audioNode: getDestination(),
       };
     case 'Reverb':
       return {
-        id: nanoid(6),
-        data: { label: 'reverb' },
-        position,
+        ...baseNode,
         audioNode: new Reverb(),
       };
     default:
@@ -86,10 +86,10 @@ function createToneNode(
 }
 
 export type ToneState = {
-  nodes: Array<ToneNode>,
+  nodes: Array<AudioNode>,
   edges: Array<Edge>,
 
-  onNodesChange(changes: Array<NodeChange<ToneNode>>): void,
+  onNodesChange(changes: Array<NodeChange<AudioNode>>): void,
   onEdgesChange(changes: Array<EdgeChange<Edge>>): void,
   addEdge(edge: Omit<Edge, 'id'>): void,
   addNode(type: ToneNodeType): void,
