@@ -13,6 +13,7 @@
       overlays = [ (import rust-overlay) ];
 
       forAllSystems = nixpkgs.lib.genAttrs [
+        "x86_64-linux"
         "aarch64-darwin"
       ];
 
@@ -25,15 +26,17 @@
           };
 
           packages-darwin = with pkgs; [
-            rustup
-            libiconv
             darwin.apple_sdk.frameworks.AppKit
             darwin.apple_sdk.frameworks.WebKit
-            cargo-tauri
-            openjdk17
           ];
 
-          packages = packages-darwin;
+          # only add packages darwin packages if we are on darwin
+          packages =  with pkgs; [
+            rustup
+            libiconv
+            cargo-tauri
+            openjdk17
+          ] ++ (if pkgs.stdenv.isDarwin then packages-darwin else []);
         in
         {
           default = pkgs.mkShell {
