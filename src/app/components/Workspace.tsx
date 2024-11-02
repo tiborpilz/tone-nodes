@@ -1,23 +1,27 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
-import { ToneAudioNode, PolySynth, Frequency, now, context } from 'tone';
+import { useState, useEffect } from 'react';
+import { ToneAudioNode, PolySynth, Frequency, now } from 'tone';
 import * as Tone from 'tone';
 import classNames from 'classnames';
 import {
   ReactFlow,
   Controls,
   Background,
-  useOnSelectionChange,
-  applyNodeChanges,
-  addEdge,
-  useEdgesState,
-  type Connection,
+  useReactFlow,
   type Node,
-  type NodeChange,
 } from '@xyflow/react';
 import SynthProps from './SynthProps';
 import { addMidiListener } from '@/app/utils/midiListener';
 import '@xyflow/react/dist/style.css';
+import { ToneState, useStore } from '@/app/store';
+
+const selector = (store: ToneState) => ({
+  nodes: store.nodes,
+  edges: store.edges,
+  onNodesChange: store.onNodesChange,
+  onEdgesChange: store.onEdgesChange,
+  addEdge: store.addEdge,
+});
 
 /**
  * The audio workspace. Add/connect/edit/remove audio nodes.
@@ -25,53 +29,31 @@ import '@xyflow/react/dist/style.css';
 export default function Workspace() {
   const [audioNodes, setAudioNodes] = useState<Array<ToneAudioNode>>([]);
   const [activeAudioNode, setActiveAudioNode] = useState<ToneAudioNode | null>(null);
-  const [nodes, setNodes] = useState<Array<Node>>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodes, setSelectedNodes] = useState<Array<Node>>([]);
+  const { fitView } = useReactFlow();
 
-  context.lookAhead = 0;
+  const store = useStore(selector);
+
+  Tone.getContext().lookAhead = 0;
 
   const createSynth = () => {
     const polySynth = new PolySynth(Tone.Synth);
 
     setAudioNodes([...audioNodes, polySynth]);
-    setNodes([...nodes, {
-      id: String(nodes.length),
-      position: { x: 0, y: 0 },
-      data: {
-        label: 'Synth',
-        audioNode: polySynth
-      },
-    }])
+    // TODO: Add a node to the store
   };
 
   const createDistortion = () => {
     const distortion = new Tone.Distortion(1).toDestination();
     distortion.oversample = '4x';
 
-    setAudioNodes([...audioNodes, distortion]);
-    setNodes([...nodes, {
-      id: String(nodes.length),
-      position: { x: 0, y: 0 },
-      data: {
-        label: 'Distortion',
-        audioNode: distortion
-      },
-    }])
+    selector.node
   };
 
   const createReverb = () => {
     const reverb = new Tone.Reverb(1).toDestination();
 
     setAudioNodes([...audioNodes, reverb]);
-    setNodes([...nodes, {
-      id: String(nodes.length),
-      position: { x: 0, y: 0 },
-      data: {
-        label: 'Reverb',
-        audioNode: reverb
-      },
-    }])
   };
 
   useEffect(() => {
@@ -104,45 +86,19 @@ export default function Workspace() {
     setActiveAudioNode(audioNode);
   }
 
-  const onSelectionChange = useCallback(({ nodes }: { nodes: Array<Node> }) => {
-    setSelectedNodes(nodes);
-  }, []);
-
-  const onNodesChange = useCallback((changes: Array<NodeChange<Node>>) => {
-    setNodes((nds) => applyNodeChanges(changes, nds));
-  }, []);
-
-  useOnSelectionChange({
-    onChange: onSelectionChange
-  });
-
-  const onConnect = (connection: Connection) => {
-    const sourceNode = nodes.find((node) => node.id === connection.source);
-    const targetNode = nodes.find((node) => node.id === connection.target);
-
-    /* const isSynthSource = sourceNode?.data.audioNode instanceof PolySynth;
-     * const isDistortionTarget = targetNode?.data.audioNode instanceof Tone.Distortion;
-     * const isReverbTarget = targetNode?.data.audioNode instanceof Tone.Reverb;
-     */
-    const synth = sourceNode?.data.audioNode as Tone.ToneAudioNode;
-    const target = targetNode?.data.audioNode as Tone.ToneAudioNode;
-
-    synth.disconnect();
-
-    synth.connect(target);
-    setEdges((oldEdges) => addEdge(connection, oldEdges));
-  };
-
   addMidiListener(triggerActiveSynth);
+
+
 
   return (
     <div className="h-[50vh]">
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        nodes={store.nodes}
+        edges={store.edges}
+        onNodesChange={store.onNodesChange}
+        onEdgesChange={store.onEdgesChange}
+        onConnect={store.addEdge}
+        fitView
       >
         <Background />
         <Controls />
