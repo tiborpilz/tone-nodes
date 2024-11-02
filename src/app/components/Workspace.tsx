@@ -9,11 +9,12 @@ import {
   Background,
   useReactFlow,
   type Node,
+  type Edge,
 } from '@xyflow/react';
 import SynthProps from './SynthProps';
 import { addMidiListener } from '@/app/utils/midiListener';
 import '@xyflow/react/dist/style.css';
-import { ToneState, useStore } from '@/app/store';
+import { ToneState, useStore, type ToneNode } from '@/app/store';
 
 const selector = (store: ToneState) => ({
   nodes: store.nodes,
@@ -21,6 +22,7 @@ const selector = (store: ToneState) => ({
   onNodesChange: store.onNodesChange,
   onEdgesChange: store.onEdgesChange,
   addEdge: store.addEdge,
+  addNode: store.addNode,
 });
 
 /**
@@ -36,39 +38,11 @@ export default function Workspace() {
 
   Tone.getContext().lookAhead = 0;
 
-  const createSynth = () => {
-    const polySynth = new PolySynth(Tone.Synth);
-
-    setAudioNodes([...audioNodes, polySynth]);
-    // TODO: Add a node to the store
-  };
-
-  const createDistortion = () => {
-    const distortion = new Tone.Distortion(1).toDestination();
-    distortion.oversample = '4x';
-
-    selector.node
-  };
-
-  const createReverb = () => {
-    const reverb = new Tone.Reverb(1).toDestination();
-
-    setAudioNodes([...audioNodes, reverb]);
-  };
-
   useEffect(() => {
     if (selectedNodes.length === 1) {
       makeActive(selectedNodes[0].data.audioNode as ToneAudioNode);
     }
   }, [selectedNodes]);
-
-  const removeAudioNode = (audioNode: ToneAudioNode) => {
-    audioNode.dispose();
-    setAudioNodes(audioNodes.filter((n) => n !== audioNode));
-    if (activeAudioNode === audioNode) {
-      setActiveAudioNode(null);
-    }
-  }
 
   const triggerActiveSynth = (command: number, midiNote?: number, velocity?: number) => {
     console.log('triggerActiveSynth', command, midiNote, velocity);
@@ -88,8 +62,6 @@ export default function Workspace() {
 
   addMidiListener(triggerActiveSynth);
 
-
-
   return (
     <div className="h-[50vh]">
       <ReactFlow
@@ -98,14 +70,14 @@ export default function Workspace() {
         onNodesChange={store.onNodesChange}
         onEdgesChange={store.onEdgesChange}
         onConnect={store.addEdge}
+        colorMode="system"
         fitView
       >
         <Background />
         <Controls />
       </ReactFlow>
-      <button onClick={createSynth}>Create Synth</button>
-      <button onClick={createDistortion}>Create Distortion</button>
-      <button onClick={createReverb}>Create Reverb</button>
+      <button onClick={() => store.addNode('Distortion')}>Create Distortion</button>
+      <button onClick={() => store.addNode('Reverb')}>Create Reverb</button>
       <div>
         {audioNodes.map((audioNode, index) => (
           <div
@@ -116,7 +88,6 @@ export default function Workspace() {
             )}
           >
             <button onClick={() => makeActive(audioNode)}>Edit</button>
-            <button onClick={() => removeAudioNode(audioNode)}>Remove</button>
           </div>
         ))}
       </div>
