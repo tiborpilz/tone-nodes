@@ -21,7 +21,7 @@ const mockAudioParam = {
 
 describe('ParamInput', () => {
   it('should render without crashing', () => {
-    render(<ParamInput param={mockAudioParam} label="Mock Param" />);
+    render(<div data-testid="param-input"><ParamInput param={mockAudioParam} label="Mock Param" /></div>);
 
     const component = document.querySelector('[data-testid="param-input"]');
     expect(component?.innerHTML).toMatchSnapshot();
