@@ -1,6 +1,7 @@
 import {
   applyEdgeChanges,
   applyNodeChanges,
+  Connection,
   type Edge,
   type EdgeChange,
   type Node,
@@ -22,18 +23,6 @@ import {
 } from 'tone';
 import { addMidiListener, initMidi } from './utils/midiListener';
 
-export type AudioNode<T = ToneAudioNode> = Node<{ audioNode: T, label: string }>
-function isAudioNode(node: Node): node is AudioNode {
-  return 'audioNode' in node.data;
-}
-
-export type MidiNode = Node<{ midiCallback: (value: number) => void, label: string }>
-function isMidiNode(node: Node): node is MidiNode {
-  return 'midiCallback' in node.data;
-}
-
-type GenericNode = AudioNode | MidiNode;
-
 type AudioNodeType =
   | 'Oscillator'
   | 'Gain'
@@ -46,7 +35,31 @@ type AudioNodeType =
 type MidiNodeType = 'MidiInput';
 type GenericNodeType = AudioNodeType | MidiNodeType;
 
-type NodeOutput<T extends GenericNodeType> = T extends AudioNodeType ? AudioNode : MidiNode;
+type BaseData = {
+  label: string,
+  nodeType: GenericNodeType,
+};
+
+/**
+ * Audio Node, anything that inputs and/or outputs Tone.js audio
+ * Can be `.connect`ed to other AudioNodes
+ */
+type AudioNodeData<T = ToneAudioNode> = BaseData & { audioNode: T };
+export type AudioNode<T = ToneAudioNode> = Node<AudioNodeData<T>>;
+function isAudioNode(node: Node): node is AudioNode {
+  return 'audioNode' in node.data;
+}
+
+/**
+ * Midi Node, custom format for handling midi input (via callbacks)
+ */
+type MidiNodeData = BaseData & { midiCallback: (value: number) => void };
+export type MidiNode = Node<MidiNodeData>;
+function isMidiNode(node: Node): node is MidiNode {
+  return 'midiCallback' in node.data;
+}
+
+type GenericNode = AudioNode | MidiNode;
 
 function findFreeCoordinates(nodes: Array<Node>): { x: number, y: number } {
   const coordinates = nodes.map(node => node.position);
@@ -77,6 +90,7 @@ function createToneNode(
         data: {
           label: 'Oscillator',
           audioNode: new Oscillator(),
+          nodeType: type,
         },
       };
     case 'Gain':
@@ -85,6 +99,7 @@ function createToneNode(
         data: {
           label: 'Gain',
           audioNode: new Gain(),
+          nodeType: type,
         },
       };
     case 'Distortion':
@@ -94,6 +109,7 @@ function createToneNode(
         data: {
           label: 'Distortion',
           audioNode: new Distortion(),
+          nodeType: type,
         },
       };
     case 'Destination':
@@ -103,6 +119,7 @@ function createToneNode(
         data: {
           label: 'Destination',
           audioNode: getDestination(),
+          nodeType: type,
         },
       };
     case 'Reverb':
@@ -111,6 +128,7 @@ function createToneNode(
         data: {
           label: 'Reverb',
           audioNode: new Reverb(),
+          nodeType: type,
         },
       };
     case 'Synth':
@@ -120,12 +138,14 @@ function createToneNode(
         data: {
           label: 'Synth',
           audioNode: new Synth(),
+          nodeType: type,
         },
       };
     case 'MidiInput':
       const data = {
         label: 'Midi Input',
         midiCallback: (value: number) => {},
+        nodeType: type,
       };
       initMidi();
       addMidiListener(baseNode.id, (command: number, midiNote?: number, velocity?: number) => {
@@ -203,6 +223,8 @@ export const useStore = create<ToneState>()((set, get) => ({
     const target = get().nodes.find(node => node.id === edge.target);
 
     if (source && target) {
+      source.type
+
       if (isAudioNode(source) && isAudioNode(target)) {
         source.data.audioNode.disconnect();
         source.data.audioNode.connect(target.data.audioNode);
@@ -230,3 +252,22 @@ export const useStore = create<ToneState>()((set, get) => ({
     set({ nodes: [...get().nodes, node] });
   },
 }));
+
+export function useConnectionValidator(store: ToneState) {
+  return (connection: Connection) => {
+
+    const source = store.nodes.find(node => node.id === connection.source);
+    const target = store.nodes.find(node => node.id === connection.target);
+
+    if (source && target) {
+      if (isAudioNode(source) && isAudioNode(target)) {
+        return true;
+      }
+
+      if (isMidiNode(source) && isAudioNode(target) && connection.targetHandle === 'midi') {
+        return true;
+      }
+    }
+    return false;
+  };
+}

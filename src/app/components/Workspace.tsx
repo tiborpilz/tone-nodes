@@ -18,7 +18,7 @@ import DistortionNode from '@/app/components/DistortionNode';
 import MidiInputNode from '@/app/components/MidiInputNode';
 import { initMidi, setMidiListener } from '@/app/utils/midiListener';
 import '@xyflow/react/dist/style.css';
-import { ToneState, useStore, type AudioNode } from '@/app/store';
+import { ToneState, useConnectionValidator, useStore, type AudioNode } from '@/app/store';
 
 const selector = (store: ToneState) => ({
   nodes: store.nodes,
@@ -55,23 +55,6 @@ export default function Workspace() {
     }
   }, [selectedNodes]);
 
-  const triggerActiveSynth = (command: number, midiNote?: number, velocity?: number) => {
-    /* if (
-*   selectedNodes.length === 1 && selectedNodes.at(0) !== undefined
-*   && selectedNodes[0].type === 'synth'
-*   && selectedNodes[0].data.audioNode instanceof Tone.Synth
-*   && midiNote !== undefined
-*   && command === 144
-* ) {
-*   console.log('triggering synth');
-*   const timeNow = now();
-*   selectedNodes[0]
-*     .data
-*     .audioNode
-*     .triggerAttackRelease(Frequency(midiNote, 'midi').toFrequency(), '32n', timeNow, velocity);
-* } */
-  }
-
   const onSelectionChange = useCallback(({ nodes }: { nodes: Array<Node> }) => {
     console.log(nodes);
     setSelectedNodes(nodes);
@@ -85,10 +68,6 @@ export default function Workspace() {
     setActiveAudioNode(audioNode);
   }
 
-  useEffect(() => {
-    setMidiListener(triggerActiveSynth);
-  }, [selectedNodes]);
-
   return (
     <div className="h-[50vh]">
       <ReactFlow
@@ -98,6 +77,7 @@ export default function Workspace() {
         onNodesChange={store.onNodesChange}
         onEdgesChange={store.onEdgesChange}
         onConnect={store.addEdge}
+        isValidConnection={useConnectionValidator(store)}
         colorMode="system"
         fitView
       >

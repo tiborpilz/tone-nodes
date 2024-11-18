@@ -1,5 +1,5 @@
-import React, { memo, useReducer } from 'react';
-import { Handle, Node, NodeProps, Position } from '@xyflow/react';
+import React, { useReducer } from 'react';
+import { Handle, NodeProps, Position } from '@xyflow/react';
 import { Envelope, Synth } from 'tone';
 import { AudioNode } from '@/app/store';
 import ParamInput from '@/app/components/ParamInput';
@@ -34,6 +34,7 @@ export default function SynthNode(props: NodeProps<AudioNode<Synth>>) {
       </div>
       <Handle
         type="target"
+        id="midi"
         position={Position.Left}
       />
       <Handle
