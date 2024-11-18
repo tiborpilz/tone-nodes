@@ -15,6 +15,7 @@ import {
 import SynthProps from './SynthProps';
 import SynthNode from '@/app/components/SynthNode';
 import DistortionNode from '@/app/components/DistortionNode';
+import MidiInputNode from '@/app/components/MidiInputNode';
 import { initMidi, setMidiListener } from '@/app/utils/midiListener';
 import '@xyflow/react/dist/style.css';
 import { ToneState, useStore, type AudioNode } from '@/app/store';
@@ -31,6 +32,7 @@ const selector = (store: ToneState) => ({
 const nodeTypes = {
   synth: SynthNode,
   distortion: DistortionNode,
+  midiInput: MidiInputNode,
 };
 
 /**
@@ -54,22 +56,20 @@ export default function Workspace() {
   }, [selectedNodes]);
 
   const triggerActiveSynth = (command: number, midiNote?: number, velocity?: number) => {
-    console.log(selectedNodes);
-    console.log('triggerActiveSynth', command, midiNote, velocity);
-    if (
-      selectedNodes.length === 1 && selectedNodes.at(0) !== undefined
-      && selectedNodes[0].type === 'synth'
-      && selectedNodes[0].data.audioNode instanceof Tone.Synth
-      && midiNote !== undefined
-      && command === 144
-    ) {
-      console.log('triggering synth');
-      const timeNow = now();
-      selectedNodes[0]
-        .data
-        .audioNode
-        .triggerAttackRelease(Frequency(midiNote, 'midi').toFrequency(), '32n', timeNow, velocity);
-    }
+    /* if (
+*   selectedNodes.length === 1 && selectedNodes.at(0) !== undefined
+*   && selectedNodes[0].type === 'synth'
+*   && selectedNodes[0].data.audioNode instanceof Tone.Synth
+*   && midiNote !== undefined
+*   && command === 144
+* ) {
+*   console.log('triggering synth');
+*   const timeNow = now();
+*   selectedNodes[0]
+*     .data
+*     .audioNode
+*     .triggerAttackRelease(Frequency(midiNote, 'midi').toFrequency(), '32n', timeNow, velocity);
+* } */
   }
 
   const onSelectionChange = useCallback(({ nodes }: { nodes: Array<Node> }) => {

@@ -14,8 +14,8 @@ let trainListenerCleanup: (() => void) = () => {};
 let channelListeners: Record<number, MidiListener> = {};
 let initialized = false;
 let resolveInitialized: () => void;
-const midiListeners: Array<MidiListener> = [];
-let midiListener: MidiListener;
+const midiListeners: Record<string, MidiListener> = {};
+let midiListener: MidiListener | null;
 
 export async function clearChannelMidiListeners() {
   await initMidi();
@@ -41,9 +41,9 @@ function handleMidiMessage(command: number, channel: number, velocity: number) {
   if (midiListener) {
     midiListener(command, channel, velocity);
   }
-  // midiListeners.forEach((listener) => {
-  //   listener(command, channel, velocity);
-  // });
+  Object.values(midiListeners).forEach((listener) => {
+    listener(command, channel, velocity);
+  });
 }
 
 export async function initMidi() {
@@ -58,6 +58,7 @@ export async function initMidi() {
   if (navigator.requestMIDIAccess) {
     navigator.requestMIDIAccess().then((midiAccess) => {
       midiAccess.inputs.forEach((input) => {
+        console.log('Adding midi input listener', input);
         input.addEventListener('midimessage', (message) => {
           if (message.data === null) {
             return;
@@ -97,12 +98,24 @@ export async function trainMidiListener(listener: MidiListener, cleanup?: () => 
   }
 }
 
-export async function addMidiListener(listener: MidiListener) {
-  console.log('Adding midi listener', midiListeners.length);
-  midiListeners.push(listener);
+export async function addMidiListener(id: string, listener: MidiListener) {
+  console.log('Adding midi listener', id);
+  midiListeners[id] = listener;
+}
+
+export async function removeMidiListener(id: string) {
+  console.log('Removing midi listener', id);
+  delete midiListeners[id];
 }
 
 export async function setMidiListener(listener: MidiListener) {
   await initMidi();
+  console.log('setting midi listener');
   midiListener = listener;
+}
+
+export async function unsetMidiListener() {
+  await initMidi();
+  console.log('unsetting midi listener');
+  midiListener = null;
 }

@@ -11,31 +11,42 @@ import { create } from 'zustand';
 import {
   ToneAudioNode,
   Oscillator,
+  Frequency,
   Gain,
   Distortion,
   Reverb,
   Synth,
   getDestination,
-  Signal,
+  ToneEvent,
+  now,
 } from 'tone';
-
-// export type AudioNode = {
-//   data: Node['data'] & { audioNode: ToneAudioNode },
-// } & Node;
+import { addMidiListener, initMidi } from './utils/midiListener';
 
 export type AudioNode<T = ToneAudioNode> = Node<{ audioNode: T, label: string }>
+function isAudioNode(node: Node): node is AudioNode {
+  return 'audioNode' in node.data;
+}
 
-export type SignalNode = {
-  data: Node['data'] & { signal: Signal },
-} & Node;
+export type MidiNode = Node<{ midiCallback: (value: number) => void, label: string }>
+function isMidiNode(node: Node): node is MidiNode {
+  return 'midiCallback' in node.data;
+}
 
-type ToneNodeType =
+type GenericNode = AudioNode | MidiNode;
+
+type AudioNodeType =
   | 'Oscillator'
   | 'Gain'
   | 'Distortion'
   | 'Destination'
   | 'Reverb'
-  | 'Synth';
+  | 'Synth'
+  | 'Midi';
+
+type MidiNodeType = 'MidiInput';
+type GenericNodeType = AudioNodeType | MidiNodeType;
+
+type NodeOutput<T extends GenericNodeType> = T extends AudioNodeType ? AudioNode : MidiNode;
 
 function findFreeCoordinates(nodes: Array<Node>): { x: number, y: number } {
   const coordinates = nodes.map(node => node.position);
@@ -49,9 +60,9 @@ function findFreeCoordinates(nodes: Array<Node>): { x: number, y: number } {
 }
 
 function createToneNode(
-  type: ToneNodeType,
+  type: GenericNodeType,
   position: { x: number, y: number } = { x: 0, y: 0 },
-): AudioNode {
+): AudioNode | MidiNode {
   const baseNode = {
     id: nanoid(6),
     data: { label: type },
@@ -111,24 +122,46 @@ function createToneNode(
           audioNode: new Synth(),
         },
       };
+    case 'MidiInput':
+      const data = {
+        label: 'Midi Input',
+        midiCallback: (value: number) => {},
+      };
+      initMidi();
+      addMidiListener(baseNode.id, (command: number, midiNote?: number, velocity?: number) => {
+        console.log('midi input', command, midiNote, velocity);
+
+        if (midiNote === undefined) {
+          return;
+        }
+
+        data.midiCallback(midiNote);
+      });
+
+      return {
+        ...baseNode,
+        data,
+        type: 'midiInput',
+      };
     default:
       throw new Error(`Unknown node type: ${type}`);
   }
 }
 
 export type ToneState = {
-  nodes: Array<AudioNode>,
+  nodes: Array<GenericNode>,
   edges: Array<Edge>,
 
-  onNodesChange(changes: Array<NodeChange<AudioNode>>): void,
+  onNodesChange(changes: Array<NodeChange<GenericNode>>): void,
   onEdgesChange(changes: Array<EdgeChange<Edge>>): void,
   addEdge(edge: Omit<Edge, 'id'>): void,
-  addNode(type: ToneNodeType): void,
+  addNode(type: GenericNodeType): void,
 };
 
 export const useStore = create<ToneState>()((set, get) => ({
   nodes: [
-    createToneNode('Synth', { x: 0, y: 100 }),
+    createToneNode('MidiInput', { x: 0, y: 100 }),
+    createToneNode('Synth', { x: 50, y: 100 }),
     createToneNode('Oscillator', { x: 100, y: 100 }),
     createToneNode('Gain', { x: 300, y: 100 }),
     createToneNode('Distortion', { x: 500, y: 100 }),
@@ -150,7 +183,7 @@ export const useStore = create<ToneState>()((set, get) => ({
 
       const source = get().nodes.find(node => node.id === edge.source);
 
-      if (source) {
+      if (source && isAudioNode(source)) {
         source.data.audioNode.disconnect();
       }
     });
@@ -170,10 +203,23 @@ export const useStore = create<ToneState>()((set, get) => ({
     const target = get().nodes.find(node => node.id === edge.target);
 
     if (source && target) {
-      source.data.audioNode.disconnect();
-      source.data.audioNode.connect(target.data.audioNode);
-      if ('start' in source.data.audioNode && typeof source.data.audioNode.start === 'function') {
-        source.data.audioNode.start();
+      if (isAudioNode(source) && isAudioNode(target)) {
+        source.data.audioNode.disconnect();
+        source.data.audioNode.connect(target.data.audioNode);
+
+        if ('start' in source.data.audioNode && typeof source.data.audioNode.start === 'function') {
+          source.data.audioNode.start();
+        }
+      }
+
+      if (isMidiNode(source) && isAudioNode(target)) {
+        source.data.midiCallback = (note) => {
+          if ('triggerAttackRelease' in target.data.audioNode && typeof target.data.audioNode.triggerAttackRelease === 'function') {
+            console.log('triggering attack release', note);
+            const timeNow = now();
+            target.data.audioNode.triggerAttackRelease(Frequency(note, 'midi').toFrequency(), '32n', timeNow);
+          }
+        }
       }
     }
   },

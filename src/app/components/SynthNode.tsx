@@ -3,6 +3,7 @@ import { Handle, Node, NodeProps, Position } from '@xyflow/react';
 import { Envelope, Synth } from 'tone';
 import { AudioNode } from '@/app/store';
 import ParamInput from '@/app/components/ParamInput';
+import FlowNode from '@/app/components/FlowNode'
 
 export default function SynthNode(props: NodeProps<AudioNode<Synth>>) {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -13,7 +14,7 @@ export default function SynthNode(props: NodeProps<AudioNode<Synth>>) {
   };
 
   return (
-    <div className="px-4 py-2 shadow-md rounded-md bg-[#1e1e1e]">
+    <FlowNode>
       <div>{ props.data.label as string }</div>
 
       <div className="grid grid-cols-[min-content_50px_1fr] gap-y-1 gap-x-2">
@@ -37,15 +38,9 @@ export default function SynthNode(props: NodeProps<AudioNode<Synth>>) {
       />
       <Handle
         type="source"
-        id="a"
+        id="output"
         position={Position.Right}
       />
-      <Handle
-        type="source"
-        id="b"
-        style={{ top: 0 }}
-        position={Position.Right}
-      />
-    </div>
+    </FlowNode>
   );
 }
