@@ -1,7 +1,7 @@
 import {
   applyEdgeChanges,
   applyNodeChanges,
-  Connection,
+  type Connection,
   type Edge,
   type EdgeChange,
   type Node,
@@ -18,7 +18,6 @@ import {
   Reverb,
   Synth,
   getDestination,
-  ToneEvent,
   now,
 } from 'tone';
 import { addMidiListener, initMidi } from './utils/midiListener';
@@ -142,9 +141,10 @@ function createToneNode(
         },
       };
     case 'MidiInput':
+      const midiCallback: (value: number) => void = () => {};
       const data = {
         label: 'Midi Input',
-        midiCallback: (value: number) => {},
+        midiCallback,
         nodeType: type,
       };
       initMidi();
@@ -254,7 +254,7 @@ export const useStore = create<ToneState>()((set, get) => ({
 }));
 
 export function useConnectionValidator(store: ToneState) {
-  return (connection: Connection) => {
+  return (connection: Edge | Connection) => {
 
     const source = store.nodes.find(node => node.id === connection.source);
     const target = store.nodes.find(node => node.id === connection.target);

@@ -1,8 +1,7 @@
 'use client';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ToneAudioNode } from 'tone';
 import * as Tone from 'tone';
-import classNames from 'classnames';
 import {
   ReactFlow,
   Controls,
@@ -36,9 +35,10 @@ const nodeTypes = {
  * The audio workspace. Add/connect/edit/remove audio nodes.
  */
 export default function Workspace() {
-  const [audioNodes, setAudioNodes] = useState<Array<ToneAudioNode>>([]);
   const [activeAudioNode, setActiveAudioNode] = useState<ToneAudioNode | null>(null);
   const [selectedNodes, setSelectedNodes] = useState<Array<Node>>([]);
+
+  console.log(activeAudioNode);
 
   const store = useStore(selector);
 
@@ -83,19 +83,6 @@ export default function Workspace() {
       </ReactFlow>
       <button onClick={() => store.addNode('Distortion')}>Create Distortion</button>
       <button onClick={() => store.addNode('Reverb')}>Create Reverb</button>
-      <div>
-        {audioNodes.map((audioNode, index) => (
-          <div
-            key={index}
-            className={classNames(
-              'flex justify-between items-center border border-gray-300 p-2',
-              activeAudioNode === audioNode && 'bg-gray-900'
-            )}
-          >
-            <button onClick={() => makeActive(audioNode)}>Edit</button>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

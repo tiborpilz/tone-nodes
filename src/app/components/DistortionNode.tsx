@@ -1,5 +1,5 @@
 import React, { useReducer } from 'react';
-import { Handle, Node, NodeProps, Position } from '@xyflow/react';
+import { Handle, NodeProps, Position } from '@xyflow/react';
 import { type Distortion } from 'tone';
 import { AudioNode } from '@/app/store';
 import ParamInput from '@/app/components/ParamInput';
