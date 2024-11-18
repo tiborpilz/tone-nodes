@@ -1,24 +1,21 @@
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ToneAudioNode, PolySynth, Frequency, now } from 'tone';
+import { ToneAudioNode } from 'tone';
 import * as Tone from 'tone';
 import classNames from 'classnames';
 import {
   ReactFlow,
   Controls,
   Background,
-  useReactFlow,
   type Node,
-  type Edge,
   useOnSelectionChange,
 } from '@xyflow/react';
-import SynthProps from './SynthProps';
 import SynthNode from '@/app/components/SynthNode';
 import DistortionNode from '@/app/components/DistortionNode';
 import MidiInputNode from '@/app/components/MidiInputNode';
-import { initMidi, setMidiListener } from '@/app/utils/midiListener';
+import { initMidi } from '@/app/utils/midiListener';
 import '@xyflow/react/dist/style.css';
-import { ToneState, useConnectionValidator, useStore, type AudioNode } from '@/app/store';
+import { ToneState, useConnectionValidator, useStore } from '@/app/store';
 
 const selector = (store: ToneState) => ({
   nodes: store.nodes,
@@ -99,7 +96,6 @@ export default function Workspace() {
           </div>
         ))}
       </div>
-      {activeAudioNode && activeAudioNode instanceof PolySynth && <SynthProps audioNode={activeAudioNode} />}
     </div>
   );
 }
